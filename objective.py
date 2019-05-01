@@ -42,16 +42,27 @@ def dcca_objective(pred1, pred2, reg):
     SigmaHat22 = torch.add(torch.mul(H2_hat.mm(torch.t(H2_hat)), 1.0 / (m - 1)), torch.mul(reg, I))
 
     # SVD decomposition for square root calculation
-    U1, D1, V1 = torch.svd(SigmaHat11)
-    U2, D2, V2 = torch.svd(SigmaHat22)
+    D1, V1 = torch.eig(SigmaHat11, eigenvectors=True)
+    D1 = D1[:, 0]
+    epsilon = 1e-12
+    D1_indices = torch.nonzero(D1.squeeze() > epsilon)
+    D1 = D1[D1_indices].squeeze()
+    V1 = V1[D1_indices].squeeze()
+
+    D2, V2 = torch.eig(SigmaHat22, eigenvectors=True)
+    D2 = D2[:, 0]
+    D2_indices = torch.nonzero(D2.squeeze() > epsilon)
+    D2 = D2[D2_indices].squeeze()
+    V2 = V2[D2_indices].squeeze()
 
     # calculate root inverse of correlation matrices
-    SigmaHat11RootInv = torch.inverse(U1.mm(torch.pow(torch.diag(D1), 0.5)).mm(torch.t(V1)))
-    SigmaHat22RootInv = torch.inverse(U2.mm(torch.pow(torch.diag(D2), 0.5)).mm(torch.t(V2)))
+    SigmaHat11RootInv = torch.inverse(V1.mm(torch.pow(torch.diag(D1), 0.5)).mm(torch.t(V1)))
+    SigmaHat22RootInv = torch.inverse(V2.mm(torch.pow(torch.diag(D2), 0.5)).mm(torch.t(V2)))
 
     # Total correlation
     T = SigmaHat11RootInv.mm(SigmaHat12).mm(SigmaHat22RootInv)
-    corr = torch.pow(torch.trace(torch.t(T).mm(T)), 0.5)
+    corr = torch.sqrt(torch.trace(torch.t(T).mm(T)))
+    # corr = torch.trace(torch.sqrt(torch.t(T).mm(T)))
 
     # Gradient calculations
     U, D, V = torch.svd(T)
@@ -64,4 +75,4 @@ def dcca_objective(pred1, pred2, reg):
     dH1 = torch.mul(torch.mul(Delta11.mm(H1_hat), 2.0) + Delta12.mm(H2_hat), 1.0 / (m - 1))
     dH2 = torch.mul(torch.mul(Delta22.mm(H2_hat), 2.0) + Delta12.mm(H1_hat), 1.0 / (m - 1))
 
-    return corr, dH1.t(), dH2.t()
+    return corr, dH1.t(), dH2.t(), SigmaHat11RootInv.mm(U), SigmaHat22RootInv.mm(V)

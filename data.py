@@ -15,13 +15,17 @@ import torch.utils.data as ds
 
 
 class Dataset(ds.Dataset):
-    def __init__(self, data_x, data_y):
-        self.X = torch.FloatTensor(data_x)
-        self.y = torch.FloatTensor(data_y)
-        self.size = len(data_y)
+    def __init__(self, views_data):
+        self.X_list = [torch.FloatTensor(data_x) for data_x, _ in views_data]
+        self.y_list = [torch.FloatTensor(data_y) for _, data_y in views_data]
+        self.size = len(self.y_list[0])
 
     def __len__(self):
         return self.size
 
     def __getitem__(self, index):
-        return self.X[index], self.y[index]
+        queried_x, queried_y = [], []
+        for view_x, view_y in zip(self.X_list, self.y_list):
+            queried_x.append(view_x[index])
+            queried_y.append(view_y[index])
+        return queried_x, queried_y
