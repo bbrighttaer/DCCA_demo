@@ -31,7 +31,7 @@ def merge_models(sub_models, name=None):
     cca_lyr = CCA(name=name + '_cca_layer')(merged_out_layer)
     model = Model(inputs=[sub_mdl.input for sub_mdl in sub_models], outputs=cca_lyr)
     # optimizer = tf.keras.optimizers.Adam(lr=0.001)
-    model.compile(optimizer='Adam', loss=loss_function, metrics=None)
+    model.compile(optimizer='Adam', loss=loss_function, metrics=[mean_pred])
     return model
 
 
@@ -105,6 +105,15 @@ if __name__ == '__main__':
                                                                has_test=True)
     print("DCCA: training set accuracy={:.2f}, validation set accuracy={:.2f}, test set accuracy={:.2f}"
           .format(sanity_check * 100, valid_accuracy * 100, test_accuracy * 100))
+
+    # Linear SVM baseline
+    sanity_check, valid_accuracy, test_accuracy = svm_classify(([v1_train_x, v1_train_y],
+                                                                [v1_valid_x, v1_valid_y],
+                                                                [v1_test_x, v1_test_y]),
+                                                               has_test=True)
+    print(
+        "Linear SVC (baseline): training set accuracy={:.2f}, validation set accuracy={:.2f}, test set accuracy={:.2f}"
+        .format(sanity_check * 100, valid_accuracy * 100, test_accuracy * 100))
 
     cor_hist = {k: np.abs(hist.history[k]) for k in hist.history.keys()}
     visualize('corr_noisy_mnist.png', series=cor_hist)

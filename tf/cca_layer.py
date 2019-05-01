@@ -72,13 +72,13 @@ class CCA(Layer):
         T = tf.matmul(SigmaHat11RootInv, tf.matmul(SigmaHat12, SigmaHat22RootInv))
         TT = tf.matmul(tf.transpose(T), T)
         if self.all_sing_vals:
-            # corr = K.sqrt(tf.trace(TT))
-            corr = tf.trace(K.sqrt(TT))
+            corr = K.sqrt(tf.trace(TT))
+            # corr = tf.trace(K.sqrt(TT))
         else:
             eig_vals, eig_vecs = tf.linalg.eigh(TT)
             topk_eig_vals, _ = tf.nn.top_k(eig_vals, self.latent_space_dim)
-            # corr = tf.sqrt(tf.reduce_sum(topk_eig_vals))
-            corr = K.sum(K.sqrt(topk_eig_vals))
+            corr = tf.sqrt(tf.reduce_sum(topk_eig_vals))
+            # corr = K.sum(K.sqrt(topk_eig_vals))
 
         return -corr
 
