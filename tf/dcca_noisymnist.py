@@ -18,6 +18,7 @@ from keras.models import Model
 from tf.cca_layer import CCA
 from tf.model import ViewModelFFN
 from utils import load_data, svm_classify, visualize
+from sklearn.preprocessing import StandardScaler
 
 
 # seed = 2019
@@ -71,14 +72,24 @@ if __name__ == '__main__':
         load_data('noisymnist_view2.gz', 'https://www2.cs.uic.edu/~vnoroozi/noisy-mnist/noisymnist_view2.gz'), batch_sz)
 
     # view 1 data
+    scl1 = StandardScaler()
     v1_train_x, v1_train_y = data1[0]
+    scl1.fit(v1_train_x)
+    scl1.transform(v1_train_x)
     v1_valid_x, v1_valid_y = data1[1]
+    scl1.transform(v1_valid_x)
     v1_test_x, v1_test_y = data1[2]
+    scl1.transform(v1_test_x)
 
     # view 2 data
+    scl2 = StandardScaler()
     v2_train_x, v2_train_y = data2[0]
+    scl2.fit(v2_train_x)
+    scl2.transform(v2_train_x)
     v2_valid_x, v2_valid_y = data2[1]
+    scl2.transform(v2_valid_x)
     v2_test_x, v2_test_y = data2[2]
+    scl2.transform(v2_test_x)
 
     # models
     view1 = ViewModelFFN(v1_input_dim, latent_dim=latent_dim, hlyrs=(1024, 1024, 1024), name='view1')
