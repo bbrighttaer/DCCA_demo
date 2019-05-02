@@ -49,7 +49,7 @@ class CCA(Layer):
         SigmaHat11 = sigma_partition * tf.matmul(H1_hat, tf.transpose(H1_hat)) + self.r1 * tf.eye(o1)
         SigmaHat22 = sigma_partition * tf.matmul(H2_hat, tf.transpose(H2_hat)) + self.r2 * tf.eye(o2)
 
-        # SVD decomposition for square root calculation
+        # Eigen decomposition for square root calculation
         [D1, V1] = tf.py_func(lambda x: np.linalg.eigh(x), [SigmaHat11], [tf.float32, tf.float32])
         [D2, V2] = tf.py_func(lambda x: np.linalg.eigh(x), [SigmaHat22], [tf.float32, tf.float32])
 
