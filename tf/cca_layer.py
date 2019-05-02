@@ -24,7 +24,7 @@ class CCA(Layer):
         self.r1 = tf.constant([r1], name='r1')
         self.r2 = tf.constant([r2], name='r2')
         self.eps = tf.constant([eps], name='epsilon')
-        super().__init__(**kwargs)
+        super(CCA, self).__init__(**kwargs)
 
     def build(self, input_shape):
         super(CCA, self).build(input_shape)
@@ -83,7 +83,7 @@ class CCA(Layer):
         return -corr
 
     def get_config(self):
-        return super().get_config()
+        return super(CCA, self).get_config()
 
     def compute_output_shape(self, input_shape):
         return (input_shape[0], self.out_dim)
