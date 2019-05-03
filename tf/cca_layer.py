@@ -50,17 +50,17 @@ class CCA(Layer):
         SigmaHat22 = sigma_partition * tf.matmul(H2_hat, tf.transpose(H2_hat)) + self.r2 * tf.eye(o2)
 
         # Eigen decomposition for square root calculation
-        [D1, V1] = tf.py_func(lambda x: np.linalg.eigh(x), [SigmaHat11], [tf.float32, tf.float32])
-        [D2, V2] = tf.py_func(lambda x: np.linalg.eigh(x), [SigmaHat22], [tf.float32, tf.float32])
+        [D1, V1] = tf.py_func(lambda x: np.linalg.eig(x), [SigmaHat11], [tf.float32, tf.float32])
+        [D2, V2] = tf.py_func(lambda x: np.linalg.eig(x), [SigmaHat22], [tf.float32, tf.float32])
 
         D1_indices = tf.where(D1 > self.eps)
         D1_indices = tf.squeeze(D1_indices)
-        V1 = tf.gather(V1, D1_indices)
+        V1 = tf.gather(V1, D1_indices, axis=1)
         D1 = tf.gather(D1, D1_indices)
 
         D2_indices = tf.where(D2 > self.eps)
         D2_indices = tf.squeeze(D2_indices)
-        V2 = tf.gather(V2, D2_indices)
+        V2 = tf.gather(V2, D2_indices, axis=1)
         D2 = tf.gather(D2, D2_indices)
 
         # calculate root inverse of correlation matrices
@@ -86,4 +86,5 @@ class CCA(Layer):
         return super(CCA, self).get_config()
 
     def compute_output_shape(self, input_shape):
+        print(input_shape)
         return (input_shape[0], self.out_dim)

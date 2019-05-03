@@ -37,6 +37,7 @@ def merge_models(sub_models, name=None):
 
 
 def loss_function(y_true, y_pred):
+    print(y_pred)
     return y_pred
 
 

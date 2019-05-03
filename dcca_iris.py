@@ -46,11 +46,11 @@ def train(view1, view2, dloader, lr, reg, n_iters):
     corr_hist = []
     counter = 0
 
-    optimizer1 = Adam(view1.parameters(), lr)
-    optimizer2 = Adam(view2.parameters(), lr)
+    optimizer1 = Adam(view1.parameters())
+    optimizer2 = Adam(view2.parameters())
 
-    sch1 = ExponentialLR(optimizer1, gamma=0.001)
-    sch2 = ExponentialLR(optimizer2, gamma=0.001)
+    # sch1 = ExponentialLR(optimizer1, gamma=0.001)
+    # sch2 = ExponentialLR(optimizer2, gamma=0.001)
 
     for epoch in range(n_epochs):
         for Xs, _ in dloader:
@@ -80,8 +80,8 @@ def train(view1, view2, dloader, lr, reg, n_iters):
 
             counter += 1
 
-        sch1.step()
-        sch2.step()
+        # sch1.step()
+        # sch2.step()
     return corr_hist
 
 
@@ -112,10 +112,10 @@ if __name__ == '__main__':
                                  shuffle=False)
 
     latent_dim = 2
-    view1 = ViewModel(input_dim=2, out_dim=latent_dim, h_layers=(200, 50))
-    view2 = ViewModel(input_dim=2, out_dim=latent_dim, h_layers=(200, 50))
-    corr_hist = train(view1, view2, tr_ldr, lr=1e-2, reg=1e-4, n_iters=5000)
-    kwargs = {'corr_hist': corr_hist}
+    view1 = ViewModel(input_dim=2, out_dim=latent_dim, h_layers=(100, 100))
+    view2 = ViewModel(input_dim=2, out_dim=latent_dim, h_layers=(100, 100))
+    corr_hist = train(view1, view2, tr_ldr, lr=1e-2, reg=1e-4, n_iters=1000)
+    vis_series = {'corr_hist': corr_hist}
 
     # DCCA evaluation
     sanity_check, test_accuracy = evaluate(tr_ldr=tr_ldr, val_ldr=val_ldr, tt_ldr=None, model=view1,
@@ -132,4 +132,4 @@ if __name__ == '__main__':
                                            has_test=False)
     print("Linear SVC (baseline): training set accuracy={}, test set accuracy={}".format(sanity_check, test_accuracy))
 
-    visualize('corr_iris.png', **kwargs)
+    visualize('corr_iris.png', vis_series)

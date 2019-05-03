@@ -14,12 +14,16 @@ import numpy as np
 import torch
 from torch.autograd import Variable
 from torch.optim import Adam, RMSprop
-from torch.optim.lr_scheduler import  ExponentialLR
+from torch.optim.lr_scheduler import ExponentialLR
 
+from sklearn.preprocessing import StandardScaler
 from models import ViewModel
 from objective import dcca_objective
 from utils import load_data, create_view_loader, visualize, evaluate
 
+# cores = torch.get_num_threads()
+# print('Available cores =', cores)
+# torch.set_num_threads(2)
 torch.manual_seed(0)
 np.random.seed(0)
 batch = 1000
@@ -43,11 +47,11 @@ def train(view1, view2, dloader, lr, reg, n_iters):
     corr_hist = []
     counter = 0
 
-    optimizer1 = Adam(view1.parameters(), lr)
-    optimizer2 = Adam(view2.parameters(), lr)
+    optimizer1 = Adam(view1.parameters())
+    optimizer2 = Adam(view2.parameters())
 
-    sch1 = ExponentialLR(optimizer1, gamma=0.001)
-    sch2 = ExponentialLR(optimizer2, gamma=0.001)
+    # sch1 = ExponentialLR(optimizer1, gamma=0.001)
+    # sch2 = ExponentialLR(optimizer2, gamma=0.001)
 
     for epoch in range(n_epochs):
         for Xs, _ in dloader:
@@ -76,14 +80,36 @@ def train(view1, view2, dloader, lr, reg, n_iters):
                 print("Epoch={}/{}, iteration={}, corr={}".format(epoch + 1, n_epochs, counter, corr))
 
             counter += 1
-        sch1.step()
-        sch2.step()
+        # sch1.step()
+        # sch2.step()
     return corr_hist
 
 
 if __name__ == '__main__':
     data1 = load_data('noisymnist_view1.gz', 'https://www2.cs.uic.edu/~vnoroozi/noisy-mnist/noisymnist_view1.gz')
     data2 = load_data('noisymnist_view2.gz', 'https://www2.cs.uic.edu/~vnoroozi/noisy-mnist/noisymnist_view2.gz')
+
+    # view 1 data
+    scl1 = StandardScaler()
+    v1_train_x, v1_train_y = data1[0]
+    scl1.fit(v1_train_x)
+    scl1.transform(v1_train_x)
+    v1_valid_x, v1_valid_y = data1[1]
+    scl1.transform(v1_valid_x)
+    v1_test_x, v1_test_y = data1[2]
+    scl1.transform(v1_test_x)
+    data1 = [(v1_train_x, v1_train_y), (v1_valid_x, v1_valid_y), (v1_test_x, v1_test_y)]
+
+    # view 2 data
+    scl2 = StandardScaler()
+    v2_train_x, v2_train_y = data2[0]
+    scl2.fit(v2_train_x)
+    scl2.transform(v2_train_x)
+    v2_valid_x, v2_valid_y = data2[1]
+    scl2.transform(v2_valid_x)
+    v2_test_x, v2_test_y = data2[2]
+    scl2.transform(v2_test_x)
+    data2 = [(v2_train_x, v2_train_y), (v2_valid_x, v2_valid_y), (v2_test_x, v2_test_y)]
 
     train_data = (data1[0], data2[0])
     val_data = (data1[1], data2[1])
@@ -101,7 +127,7 @@ if __name__ == '__main__':
     # view1 = CnnViewModel(latent_dim)
     # view2 = CnnViewModel(latent_dim)
     corr_hist = train(view1, view2, tr_ldr, lr=1e-1, reg=1e-4, n_iters=5000)
-    kwargs = {'corr_hist': corr_hist}
+    viz_data = {'corr_hist': corr_hist}
 
     # DCCA evaluation
     sanity_check, val_accuracy, test_accuracy = evaluate(tr_ldr=tr_ldr, val_ldr=val_ldr, tt_ldr=tt_ldr, model=view1,
@@ -118,4 +144,4 @@ if __name__ == '__main__':
     #     val_accuracy,
     #     test_accuracy))
 
-    visualize('corr_mnist.png', **kwargs)
+    visualize('corr_mnist.png', viz_data)
